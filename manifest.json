@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "OBF CASE Alignment Importer Sample",
+  "version": "0.1.0",
+  "description": "OBF × CASE連携のサンプル実装。バッジ編集画面からCASEアイテムをアライメントに追加できます",
+  "host_permissions": [
+    "https://openbadgefactory.com/*",
+    "https://opensalt.net/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://openbadgefactory.com/c/badge*"],
+      "js": ["content/page-interceptor.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://openbadgefactory.com/c/badge*"],
+      "js": ["content/main.js"],
+      "css": ["content/modal.css"]
+    }
+  ]
+}

@@ -1,0 +1,234 @@
+/* OBF CASE Alignment Importer — Modal Styles */
+
+.case-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+.case-overlay.is-open {
+  display: flex;
+}
+
+/* ── Modal Container ── */
+.case-modal {
+  background: #fff;
+  border-radius: 4px;
+  width: 820px;
+  max-width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.28);
+}
+
+/* ── Header ── */
+.case-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+.case-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+.case-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.case-modal-close:hover { color: #333; }
+
+/* ── Body ── */
+.case-modal-body {
+  padding: 14px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Search Row ── */
+.case-search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.case-search-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+.case-search-input:focus {
+  border-color: #e8763a;
+  box-shadow: 0 0 0 2px rgba(232, 118, 58, 0.18);
+}
+.case-search-btn {
+  padding: 6px 18px;
+  background: #e8763a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.case-search-btn:hover { background: #d4682e; }
+
+/* ── Type Filter Chips ── */
+.case-type-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.case-type-btn {
+  padding: 3px 12px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #555;
+  background: #fff;
+  user-select: none;
+}
+.case-type-btn:hover {
+  border-color: #e8763a;
+  color: #e8763a;
+}
+.case-type-btn.active {
+  background: #e8763a;
+  border-color: #e8763a;
+  color: #fff;
+}
+
+/* ── Two-Pane Layout ── */
+.case-two-pane {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── List Pane (left) ── */
+.case-list-pane {
+  flex: 0 0 44%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.case-list {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow-y: auto;
+  flex: 1;
+}
+.case-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.case-list-item:last-child { border-bottom: none; }
+.case-list-item:hover { background: #fdf5f0; }
+.case-list-item.active {
+  background: #e8763a;
+  color: #fff;
+}
+.case-list-item.active .case-type-badge {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.case-item-check { flex-shrink: 0; cursor: pointer; }
+.case-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.case-type-badge {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  background: #5bc0de;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ── Detail Pane (right) ── */
+.case-detail-pane {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px;
+  overflow-y: auto;
+  background: #fafafa;
+  font-size: 13px;
+}
+.case-detail-placeholder {
+  color: #bbb;
+  text-align: center;
+  margin-top: 50px;
+}
+.case-detail-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+.case-detail-url {
+  color: #e8763a;
+  font-size: 11px;
+  word-break: break-all;
+  display: block;
+  margin-bottom: 10px;
+}
+.case-detail-meta {
+  color: #666;
+  margin: 4px 0;
+}
+.case-detail-notes {
+  color: #444;
+  margin: 10px 0;
+  line-height: 1.6;
+}
+.case-select-btn {
+  margin-top: 14px;
+  padding: 7px 22px;
+  background: #555;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.case-select-btn:hover { background: #333; }
+
+/* ── Status messages ── */
+.case-status-msg {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+}
