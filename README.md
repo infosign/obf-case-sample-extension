@@ -60,4 +60,4 @@ const CASE_ENDPOINT = 'https://your-case-server/ims/case/v1p0/CFPackages/{id}';
 
 Apache License 2.0 — 詳細は [LICENSE](./LICENSE) を参照してください。
 
-© 2026 インフォザイン株式会社
+© 2026 株式会社インフォザイン
