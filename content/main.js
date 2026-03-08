@@ -48,6 +48,8 @@
   // ── State ──────────────────────────────────────────────────────
   let caseData = null;
   let filteredItems = [];
+  let treeData    = null;        // buildTree() が返すルートノード配列
+  let expandedIds = new Set();   // 展開中ノードの identifier
   // CFItem.identifier → OBF alignment ID のセッション内キャッシュ（同セッション内の重複登録防止）
   const registeredCache = new Map();
 
@@ -142,7 +144,6 @@
                      type="text" placeholder="${T.searchPlaceholder}">
               <button id="case-search-btn" class="case-search-btn" type="button">${T.searchBtn}</button>
             </div>
-            <div id="case-type-filters" class="case-type-filters"></div>
             <div class="case-two-pane">
               <div class="case-list-pane">
                 <div id="case-list" class="case-list">
@@ -178,8 +179,7 @@
       `<div class="case-detail-placeholder">${T.detailPlaceholder}</div>`;
 
     if (caseData) {
-      renderTypeFilters(caseData.items);
-      renderList(caseData.items);
+      renderTree(treeData);
     } else {
       setListMessage(T.loading);
       chrome.runtime.sendMessage({ action: 'fetchCASE' }, response => {
@@ -189,8 +189,8 @@
         }
         if (response?.success) {
           caseData = response.data;
-          renderTypeFilters(caseData.items);
-          renderList(caseData.items);
+          treeData = buildTree(caseData.items, caseData.associations);
+          renderTree(treeData);
         } else {
           setListMessage(T.loadFailed + (response?.error || '?'));
         }
@@ -202,10 +202,6 @@
     document.getElementById('case-picker-overlay').classList.remove('is-open');
     document.body.style.overflow = '';
     document.getElementById('case-search-input').value = '';
-    document.querySelectorAll('.case-type-btn').forEach(b => b.classList.remove('active'));
-    const allBtn = document.querySelector('.case-type-btn[data-type=""]');
-    if (allBtn) allBtn.classList.add('active');
-    activeTypeFilter = null;
   }
 
   function setListMessage(msg) {
@@ -213,42 +209,116 @@
       `<div class="case-status-msg">${escHtml(msg)}</div>`;
   }
 
-  // ── Type Filters ───────────────────────────────────────────────
-  let activeTypeFilter = null;
+  // ── Tree ───────────────────────────────────────────────────────
+  function buildTree(items, associations) {
+    const itemMap = new Map(items.map(i => [i.identifier, i]));
+    const childrenMap = new Map(); // parentId → [childId, ...]
+    const hasParent = new Set();
 
-  function renderTypeFilters(items) {
-    const types = [...new Set(items.map(i => i.CFItemType).filter(Boolean))];
-    const container = document.getElementById('case-type-filters');
-    container.innerHTML =
-      `<button class="case-type-btn active" type="button" data-type="">${T.allTypes}</button>` +
-      types.map(t =>
-        `<button class="case-type-btn" type="button" data-type="${escHtml(t)}">${escHtml(t)}</button>`
-      ).join('');
+    for (const assoc of (associations || [])) {
+      if (assoc.associationType === 'isChildOf') {
+        // CASE 1.0 spec: child is originNodeURI, parent is destinationNodeURI
+        const childId  = assoc.originNodeURI?.identifier;
+        const parentId = assoc.destinationNodeURI?.identifier;
+        // Only create parent-child link if both exist AND parent is a CFItem
+        // (top-level items are children of CFDocument, which is not in itemMap)
+        if (childId && parentId && itemMap.has(parentId)) {
+          if (!childrenMap.has(parentId)) childrenMap.set(parentId, []);
+          childrenMap.get(parentId).push(childId);
+          hasParent.add(childId);
+        }
+      }
+    }
 
-    container.querySelectorAll('.case-type-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        container.querySelectorAll('.case-type-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeTypeFilter = btn.dataset.type || null;
-        doSearch();
+    function buildNode(id) {
+      const item = itemMap.get(id);
+      if (!item) return null;
+      const childIds = childrenMap.get(id) || [];
+      return { item, children: childIds.map(buildNode).filter(Boolean) };
+    }
+
+    const roots = items
+      .filter(i => !hasParent.has(i.identifier))
+      .map(i => buildNode(i.identifier))
+      .filter(Boolean);
+    return roots;
+  }
+
+  function flattenTree(nodes, depth = 0, result = []) {
+    for (const node of nodes) {
+      const hasChildren = node.children.length > 0;
+      result.push({ item: node.item, depth, hasChildren });
+      if (hasChildren && expandedIds.has(node.item.identifier)) {
+        flattenTree(node.children, depth + 1, result);
+      }
+    }
+    return result;
+  }
+
+  function renderTree(rootNodes) {
+    if (!rootNodes) return;
+    const list = document.getElementById('case-list');
+    const rows = flattenTree(rootNodes);
+
+    if (rows.length === 0) {
+      list.innerHTML = `<div class="case-status-msg">${T.noResults}</div>`;
+      return;
+    }
+
+    list.innerHTML = rows.map((row, idx) => {
+      const { item, depth, hasChildren } = row;
+      const isOpen = expandedIds.has(item.identifier);
+      const toggle = hasChildren
+        ? `<button class="case-tree-toggle${isOpen ? ' is-open' : ''}" data-id="${escHtml(item.identifier)}" type="button">${isOpen ? '▼' : '▶'}</button>`
+        : `<span class="case-tree-leaf-indent"></span>`;
+      return `
+        <div class="case-list-item" data-idx="${idx}" style="--depth:${depth}">
+          ${toggle}
+          <span class="case-item-label">${item.humanCodingScheme ? escHtml(item.humanCodingScheme) + ' ' : ''}${escHtml(item.fullStatement || '')}</span>
+        </div>`;
+    }).join('');
+
+    // Store rows for click handler lookup
+    list._treeRows = rows;
+
+    list.querySelectorAll('.case-tree-toggle').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleNode(btn.dataset.id);
       });
     });
+
+    list.querySelectorAll('.case-list-item').forEach(el => {
+      el.addEventListener('click', () => {
+        list.querySelectorAll('.case-list-item').forEach(r => r.classList.remove('active'));
+        el.classList.add('active');
+        const row = list._treeRows[parseInt(el.dataset.idx)];
+        if (row) showDetail(row.item);
+      });
+    });
+  }
+
+  function toggleNode(id) {
+    if (expandedIds.has(id)) {
+      expandedIds.delete(id);
+    } else {
+      expandedIds.add(id);
+    }
+    renderTree(treeData);
   }
 
   // ── Search ─────────────────────────────────────────────────────
   function doSearch() {
     if (!caseData) return;
     const kw = document.getElementById('case-search-input').value.trim().toLowerCase();
-    let items = caseData.items;
-    if (kw) {
-      items = items.filter(item =>
-        (item.fullStatement || '').toLowerCase().includes(kw) ||
-        (item.humanCodingScheme || '').toLowerCase().includes(kw)
-      );
+    if (!kw) {
+      renderTree(treeData);
+      return;
     }
-    if (activeTypeFilter) {
-      items = items.filter(item => item.CFItemType === activeTypeFilter);
-    }
+    const items = caseData.items.filter(item =>
+      (item.fullStatement || '').toLowerCase().includes(kw) ||
+      (item.humanCodingScheme || '').toLowerCase().includes(kw)
+    );
     renderList(items);
   }
 

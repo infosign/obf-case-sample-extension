@@ -18,8 +18,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       })
       .then(data => {
         caseCache = {
-          document: data.CFDocument,
-          items: data.CFItems || []
+          document:     data.CFDocument,
+          items:        data.CFItems        || [],
+          associations: data.CFAssociations || [],
         };
         sendResponse({ success: true, data: caseCache });
       })
