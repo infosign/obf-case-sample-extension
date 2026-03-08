@@ -39,7 +39,9 @@
       } else if (existing && typeof existing === 'object' && Object.keys(existing).length > 0) {
         ids.forEach(id => { body.alignment[lang][id] = 1; });
       } else {
-        body.alignment[lang] = ids;
+        const obj = {};
+        ids.forEach(id => { obj[id] = 1; });
+        body.alignment[lang] = obj;
       }
 
       clearPendingIds();
