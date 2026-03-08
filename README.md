@@ -1,10 +1,76 @@
 # OBF CASE Alignment Importer Sample
 
-Open Badge Factory（OBF）のバッジ編集画面に「CASEから選択」リンクを追加し、CASEフレームワークのアイテムをバッジのアライメントとして登録するChrome/Edge拡張機能のサンプル実装です。
+A sample Chrome/Edge extension that adds a "Pick from CASE" link to the Open Badge Factory badge editor, allowing you to search and select items from a CASE framework and register them as badge alignments.
+
+## Overview
+
+From the [Open Badge Factory](https://openbadgefactory.com/) badge editor, you can search and select items from a [CASE (Curriculum and Assessment Standards Exchange)](https://www.imsglobal.org/activity/case) framework and add them directly as alignments.
+
+Currently supports the **Japanese High School Course of Study** (MEXT / [OpenSALT](https://opensalt.net/cftree/doc/4007)) only.
+
+## Requirements
+
+- Chrome or Edge (Manifest V3)
+- An [Open Badge Factory](https://openbadgefactory.com/) account
+
+## Installation
+
+1. Clone this repository or download it as a ZIP
+2. Open `chrome://extensions` in Chrome
+3. Enable **Developer mode** (top right)
+4. Click **Load unpacked** and select this folder
+
+## Usage
+
+1. Log in to OBF and open a badge editor
+2. A **"Pick from CASE"** link will appear next to the existing "Pick from ESCO" link in the alignments section
+3. Click the link to open the modal, then search by keyword or filter by item type
+4. Select an item from the list and click **"Add to badge"** in the right pane
+5. Save the badge — the alignment will be registered
+
+## File Structure
+
+```
+obf-case-sample-extension/
+├── manifest.json              # MV3 manifest
+├── background.js              # CASE API fetch and cache
+└── content/
+    ├── page-interceptor.js    # XHR interceptor (MAIN world)
+    ├── main.js                # UI and logic
+    └── modal.css              # Modal styles
+```
+
+## Technical Notes
+
+- OBF saves badges via Backbone.js (XHR), so `page-interceptor.js` runs in `world: "MAIN"` to intercept requests
+- Communication between the content script and MAIN world is handled through a shared DOM `<meta>` element
+- To prevent duplicate alignments, existing OBF alignments are checked in two steps using the alignment URL
+
+See [CLAUDE.md](./CLAUDE.md) for full technical details.
+
+## Customization
+
+To use a different CASE framework, update `CASE_ENDPOINT` in `background.js`:
+
+```javascript
+const CASE_ENDPOINT = 'https://your-case-server/ims/case/v1p0/CFPackages/{id}';
+```
+
+## License
+
+Apache License 2.0 — see [LICENSE](./LICENSE) for details.
+
+© 2026 Infosign, Inc.
+
+---
+
+# OBF CASE Alignment Importer Sample（日本語）
+
+[Open Badge Factory](https://openbadgefactory.com/) のバッジ編集画面に「CASEから選択」リンクを追加し、CASEフレームワークのアイテムをバッジのアライメントとして登録するChrome/Edge拡張機能のサンプル実装です。
 
 ## 概要
 
-[Open Badge Factory](https://openbadgefactory.com/) のバッジ編集画面から、[CASE（Curriculum and Assessment Standards Exchange）](https://www.imsglobal.org/activity/case) フレームワークのアイテムを直接検索・選択してアライメントに追加できます。
+バッジ編集画面から、[CASE（Curriculum and Assessment Standards Exchange）](https://www.imsglobal.org/activity/case) フレームワークのアイテムを直接検索・選択してアライメントに追加できます。
 
 現在は**高等学校学習指導要領**（文部科学省 / [OpenSALT](https://opensalt.net/cftree/doc/4007)）のみに対応しています。
 

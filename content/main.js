@@ -1,6 +1,50 @@
 (function () {
   'use strict';
 
+  // ── i18n ───────────────────────────────────────────────────────
+  const isJa = document.documentElement.lang?.startsWith('ja');
+  const T = isJa ? {
+    linkText:        'CASEから選択',
+    modalTitle:      'CASEから選択',
+    searchPlaceholder: 'キーワードで検索（日本語可）',
+    searchBtn:       '検索',
+    allTypes:        'すべて',
+    loading:         '読み込み中...',
+    detailPlaceholder: '左のリストから項目を選択してください',
+    errorReload:     'エラー: 拡張機能を再読み込みしてください',
+    loadFailed:      '読み込み失敗: ',
+    noResults:       '該当する項目がありません',
+    limitMsg:        n => `表示上限(${n}件)に達しました。検索で絞り込んでください。`,
+    codeLabel:       'コード: ',
+    typeLabel:       '種別: ',
+    addToBadge:      'バッジに追加',
+    checking:        '確認中...',
+    registering:     '登録中...',
+    csrfError:       'CSRFトークンの取得に失敗しました。ページを再読み込みしてください。',
+    addFailed:       'アライメントの追加に失敗しました: ',
+    idError:         'アライメントIDを取得できませんでした',
+  } : {
+    linkText:        'Pick from CASE',
+    modalTitle:      'Pick from CASE',
+    searchPlaceholder: 'Search by keyword',
+    searchBtn:       'Search',
+    allTypes:        'All',
+    loading:         'Loading...',
+    detailPlaceholder: 'Select an item from the list',
+    errorReload:     'Error: please reload the extension',
+    loadFailed:      'Load failed: ',
+    noResults:       'No matching items',
+    limitMsg:        n => `Showing first ${n} items. Use search to narrow results.`,
+    codeLabel:       'Code: ',
+    typeLabel:       'Type: ',
+    addToBadge:      'Add to badge',
+    checking:        'Checking...',
+    registering:     'Registering...',
+    csrfError:       'Failed to get CSRF token. Please reload the page.',
+    addFailed:       'Failed to add alignment: ',
+    idError:         'Could not get alignment ID',
+  };
+
   // ── State ──────────────────────────────────────────────────────
   let caseData = null;
   let filteredItems = [];
@@ -30,7 +74,7 @@
 
     // 「ESCOから選択」を含むリンクを探す（表示中のもの優先）
     const allEscoLinks = Array.from(document.querySelectorAll('a'))
-      .filter(a => a.textContent.includes('ESCOから選択'));
+      .filter(a => a.textContent.includes('ESCO'));
     if (allEscoLinks.length === 0) return;
 
     // 表示されているリンクがあればそれを、なければ最初のものを使う
@@ -42,7 +86,7 @@
     link.href = '#';
     link.id = 'case-badge-link';
     link.style.color = '#e8763a';
-    link.textContent = 'CASEから選択';
+    link.textContent = T.linkText;
     link.addEventListener('click', e => {
       e.preventDefault();
       openModal();
@@ -88,25 +132,25 @@
         <div class="case-modal">
 
           <div class="case-modal-header">
-            <span class="case-modal-title">CASEから選択</span>
+            <span class="case-modal-title">${T.modalTitle}</span>
             <button id="case-close-btn" class="case-modal-close" type="button">×</button>
           </div>
 
           <div class="case-modal-body">
             <div class="case-search-row">
               <input id="case-search-input" class="case-search-input"
-                     type="text" placeholder="キーワードで検索（日本語可）">
-              <button id="case-search-btn" class="case-search-btn" type="button">検索</button>
+                     type="text" placeholder="${T.searchPlaceholder}">
+              <button id="case-search-btn" class="case-search-btn" type="button">${T.searchBtn}</button>
             </div>
             <div id="case-type-filters" class="case-type-filters"></div>
             <div class="case-two-pane">
               <div class="case-list-pane">
                 <div id="case-list" class="case-list">
-                  <div class="case-status-msg">読み込み中...</div>
+                  <div class="case-status-msg">${T.loading}</div>
                 </div>
               </div>
               <div id="case-detail-pane" class="case-detail-pane">
-                <div class="case-detail-placeholder">左のリストから項目を選択してください</div>
+                <div class="case-detail-placeholder">${T.detailPlaceholder}</div>
               </div>
             </div>
           </div>
@@ -131,16 +175,16 @@
     document.body.style.overflow = 'hidden';
 
     document.getElementById('case-detail-pane').innerHTML =
-      '<div class="case-detail-placeholder">左のリストから項目を選択してください</div>';
+      `<div class="case-detail-placeholder">${T.detailPlaceholder}</div>`;
 
     if (caseData) {
       renderTypeFilters(caseData.items);
       renderList(caseData.items);
     } else {
-      setListMessage('読み込み中...');
+      setListMessage(T.loading);
       chrome.runtime.sendMessage({ action: 'fetchCASE' }, response => {
         if (chrome.runtime.lastError) {
-          setListMessage('エラー: 拡張機能を再読み込みしてください');
+          setListMessage(T.errorReload);
           return;
         }
         if (response?.success) {
@@ -148,7 +192,7 @@
           renderTypeFilters(caseData.items);
           renderList(caseData.items);
         } else {
-          setListMessage('読み込み失敗: ' + (response?.error || '不明なエラー'));
+          setListMessage(T.loadFailed + (response?.error || '?'));
         }
       });
     }
@@ -176,7 +220,7 @@
     const types = [...new Set(items.map(i => i.CFItemType).filter(Boolean))];
     const container = document.getElementById('case-type-filters');
     container.innerHTML =
-      `<button class="case-type-btn active" type="button" data-type="">すべて</button>` +
+      `<button class="case-type-btn active" type="button" data-type="">${T.allTypes}</button>` +
       types.map(t =>
         `<button class="case-type-btn" type="button" data-type="${escHtml(t)}">${escHtml(t)}</button>`
       ).join('');
@@ -214,7 +258,7 @@
     const list = document.getElementById('case-list');
 
     if (items.length === 0) {
-      list.innerHTML = '<div class="case-status-msg">該当する項目がありません</div>';
+      list.innerHTML = `<div class="case-status-msg">${T.noResults}</div>`;
       return;
     }
 
@@ -232,7 +276,7 @@
 
     list.innerHTML = rows +
       (items.length > LIMIT
-        ? `<div class="case-status-msg">表示上限(${LIMIT}件)に達しました。検索で絞り込んでください。</div>`
+        ? `<div class="case-status-msg">${escHtml(T.limitMsg(LIMIT))}</div>`
         : '');
 
     list.querySelectorAll('.case-list-item').forEach(el => {
@@ -255,15 +299,15 @@
           ${escHtml(itemUrl(item))}
         </a>
         ${item.humanCodingScheme
-          ? `<p class="case-detail-meta">コード: ${escHtml(item.humanCodingScheme)}</p>`
+          ? `<p class="case-detail-meta">${T.codeLabel}${escHtml(item.humanCodingScheme)}</p>`
           : ''}
         ${item.CFItemType
-          ? `<p class="case-detail-meta">種別: ${escHtml(item.CFItemType)}</p>`
+          ? `<p class="case-detail-meta">${T.typeLabel}${escHtml(item.CFItemType)}</p>`
           : ''}
         ${item.notes
           ? `<p class="case-detail-notes">${escHtml(item.notes)}</p>`
           : ''}
-        <button class="case-select-btn" id="case-select-btn" type="button">バッジに追加</button>
+        <button class="case-select-btn" id="case-select-btn" type="button">${T.addToBadge}</button>
       </div>
     `;
 
@@ -302,7 +346,7 @@
   async function registerAndAddToBadge(item) {
     const url = itemUrl(item);
     const btn = document.getElementById('case-select-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '確認中...'; }
+    if (btn) { btn.disabled = true; btn.textContent = T.checking; }
 
     try {
       let alignmentId;
@@ -317,11 +361,11 @@
 
         if (!alignmentId) {
           // 3. 存在しなければ新規作成
-          if (btn) btn.textContent = '登録中...';
+          if (btn) btn.textContent = T.registering;
           const csrf = await getCSRFToken();
           if (!csrf) {
-            alert('CSRFトークンの取得に失敗しました。ページを再読み込みしてください。');
-            if (btn) { btn.disabled = false; btn.textContent = 'バッジに追加'; }
+            alert(T.csrfError);
+            if (btn) { btn.disabled = false; btn.textContent = T.addToBadge; }
             return;
           }
 
@@ -343,7 +387,7 @@
           });
 
           alignmentId = new URL(res.url).searchParams.get('saved');
-          if (!alignmentId) throw new Error('アライメントIDを取得できませんでした');
+          if (!alignmentId) throw new Error(T.idError);
         }
 
         registeredCache.set(item.identifier, alignmentId);
@@ -354,8 +398,8 @@
       closeModal();
 
     } catch (err) {
-      alert('アライメントの追加に失敗しました: ' + err.message);
-      if (btn) { btn.disabled = false; btn.textContent = 'バッジに追加'; }
+      alert(T.addFailed + err.message);
+      if (btn) { btn.disabled = false; btn.textContent = T.addToBadge; }
     }
   }
 
