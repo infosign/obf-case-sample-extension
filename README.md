@@ -48,6 +48,24 @@ obf-case-sample-extension/
 
 See [CLAUDE.md](./CLAUDE.md) for full technical details.
 
+## Limitations
+
+**This extension is a workaround, not a standards-compliant CASE integration.**
+
+OBF currently implements the Open Badges **2.0** alignment schema. The CASE-specific fields defined in Open Badges **3.0** (`targetFramework`, `targetCode`, `targetType`, etc.) are not supported by OBF. As a result, CASE data is mapped to the available OB 2.0 fields as follows:
+
+| OBF field | What is stored | OBv3 equivalent |
+|---|---|---|
+| `name` | `CFItem.fullStatement` | `targetName` |
+| `url` | `https://opensalt.net/uri/{identifier}` | `targetUrl` |
+| `description` | `CFItem.notes` or `CFItem.CFItemType` | `targetDescription` |
+| `framework` | *(empty — OBF validation issue)* | `targetFramework` |
+| `code` | *(empty — OBF validation issue)* | `targetCode` |
+
+`targetType: "CFItem"` and `targetFramework` have no corresponding field in OBF's current UI and are not stored.
+
+If OBF adds official OBv3 + CASE support in the future, this extension will need to be reworked accordingly.
+
 ## Customization
 
 To use a different CASE framework, update `CASE_ENDPOINT` in `background.js`:
@@ -113,6 +131,24 @@ obf-case-sample-extension/
 - アライメントの重複登録を防ぐため、OBF の既存アライメントをURLで2段階検索しています
 
 詳細は [CLAUDE.md](./CLAUDE.md) を参照してください。
+
+## 制約・注意事項
+
+**本拡張機能は暫定的な回避策であり、CASE の正式な標準実装ではありません。**
+
+OBF は現在 Open Badges **2.0** のアライメントスキーマを使用しています。Open Badges **3.0** で定義されている CASE 対応フィールド（`targetFramework`・`targetCode`・`targetType` 等）は OBF に存在しないため、CASE データを既存の OB 2.0 フィールドに次のように割り当てています。
+
+| OBF フィールド | セットされる値 | OBv3 での対応 |
+|---|---|---|
+| `name` | `CFItem.fullStatement`（例: "国語"）| `targetName` |
+| `url` | `https://opensalt.net/uri/{identifier}` | `targetUrl` |
+| `description` | `CFItem.notes` または `CFItem.CFItemType` | `targetDescription` |
+| `framework` | **空**（OBF のバリデーション制約のため）| `targetFramework` |
+| `code` | **空**（OBF のバリデーション制約のため）| `targetCode` |
+
+`targetType: "CFItem"` および `targetFramework` に相当するフィールドは OBF の現 UI に存在しないため、保存されません。
+
+将来 OBF が OBv3 + CASE に正式対応した場合、本拡張機能の大幅な見直しが必要になります。
 
 ## カスタマイズ
 
